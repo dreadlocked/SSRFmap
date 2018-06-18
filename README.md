@@ -35,7 +35,7 @@ Default range scan on 127.0.0.1/32 via GET requests
 ruby ssrfmap.rb --url http://www.example.com/controller?url=_SSRF_
 ```
 
-Range scan on 127.0.0.1/32 via GET requests
+Range scan on 192.168.0.0/24 via GET requests
 ```
 ruby ssrfmap.rb --url http://www.example.com/controller?url=_SSRF_ --range 192.168.0.0/24
 ```
