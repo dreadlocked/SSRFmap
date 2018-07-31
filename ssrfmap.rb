@@ -79,6 +79,7 @@ def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 		content_type = 'application/x-www-form-urlencoded'
 	end
 
+  #puts "Requesting: " + final_uri.to_s
 	request = Typhoeus::Request.new(
 	  "#{final_uri}",
 	  method: http_method.to_sym,
@@ -88,13 +89,20 @@ def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 
 	request.on_complete do |response|
     
-	  if response.success? && response.response_body && $options[:length] == response.response_body.length
-      if regex && response.response_body.include?(regex)
+    if $options[:base64] then
+      ssrf_uri = Base64.decode64 ssrf_uri
+    end
+
+	  if response.success? && response.response_body
+      if $options[:length] && $options[:length] == response.response_body.length.to_s
+        
+      elsif regex && response.response_body.include?(regex)
+        
       else
   	  	if mode == "exploit"
   	  		puts response.response_body
   	  	else
-  	  		puts "[*] Found service on port: " + ssrf_uri
+  	  		puts "[*] Found service on port: " + ssrf_uri + " | Length: " + response.response_body.length.to_s
   	  	end
       end
 	  elsif response.timed_out?  
@@ -164,7 +172,7 @@ target_range = NetAddr::CIDR.create(target_range)
 puts "Running on scan mode:\nTarget: #{target_range}\nProtocol: #{target_prt}"
 
 for i in 0..target_range.size-1 do
-	hydra = Typhoeus::Hydra.new
+	hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
 	target_host = target_range[i]
 
