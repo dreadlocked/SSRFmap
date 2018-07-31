@@ -63,7 +63,7 @@ end
 #
 def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 
-	if body[0] == "{" then # Its JSON
+	if body && body[0] == "{" then # Its JSON
 		content_type = 'application/json'
 	else
 		content_type = 'application/x-www-form-urlencoded'
