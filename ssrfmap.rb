@@ -37,6 +37,10 @@ OptionParser.new do |opts|
     options[:regex] = d
   end
 
+  opts.on("--length LENGTH", "[Optional] Response length to identify false results (in case target always returns 200 OK)") do |d|
+    options[:length] = d
+  end
+
   opts.on("--base64", "Encode payload in base64") do |d|
     options[:base64] = true
   end
@@ -66,6 +70,7 @@ end
 # final_uri => Defines target uri
 # mode => Defines if script is running on "exploit" mode or just "scan" mode
 #
+$options = options
 def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 
 	if body && body[0] == "{" then # Its JSON
@@ -82,8 +87,8 @@ def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 	)
 
 	request.on_complete do |response|
-
-	  if response.success? && response.response_body
+    
+	  if response.success? && response.response_body && $options[:length] == response.response_body.length
       if regex && response.response_body.include?(regex)
       else
   	  	if mode == "exploit"
