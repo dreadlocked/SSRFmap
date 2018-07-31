@@ -16,7 +16,10 @@ bundle install
     --data POST_PARAMETERS       [Optional] POST parameters quoted: 'param1=a&param2=b'
     --method METHOD              [Optional] HTTP Verb to use, default is GET
     --regex REGEX                [Optional] String to identify false results (in case target always returns 200 OK)
+    --length LENGTH              [Optional] Response length to identify false results (in case target always returns 200 OK)
+    --base64                     Encode payload in base64
 -h, --help                       Prints this help
+
 ```
 #### Usage examples
 
