@@ -17,7 +17,7 @@ bundle install
 -m, --method METHOD              [Optional] HTTP Verb to use, default is GET
     --regex REGEX                [Optional] String to identify false results (in case target always returns 200 OK)
 -l, --length LENGTH              [Optional] Response length to identify false results (in case target always returns 200 OK)
--T, --threads LEVEL              [Optional] Aggressivity level [1,2,3,4,5], more aggressive means more requests per second. Default: 3)
+-T, --threads LEVEL              [Optional] Aggressivity level [1,2,3,4,5], more aggressive means more requests per second. (default: 3)
 -p, --port PORT                  [Optional] Scans for one port
 -A, --all                        [Optional] Scan all ports (only in scan mode)
     --base64                     [Optional] Encode payload in base64
