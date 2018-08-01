@@ -36,11 +36,11 @@ OptionParser.new do |opts|
     options[:target] = d
   end
 
-  opts.on("--data POST_PARAMETERS", "[Optional] POST parameters quoted: 'param1=a&param2=b'") do |d|
+  opts.on("-d POST_PARAMETERS","--data POST_PARAMETERS", "[Optional] POST parameters quoted: 'param1=a&param2=b'") do |d|
     options[:post_data] = d
   end
 
-  opts.on("--method METHOD", "[Optional] HTTP Verb to use, default is GET") do |d|
+  opts.on("-m METHOD","--method METHOD", "[Optional] HTTP Verb to use, default is GET") do |d|
     options[:method] = d
   end
 
@@ -48,19 +48,19 @@ OptionParser.new do |opts|
     options[:regex] = d
   end
 
-  opts.on("--length LENGTH", "[Optional] Response length to identify false results (in case target always returns 200 OK)") do |d|
+  opts.on("-l LENGTH","--length LENGTH", "[Optional] Response length to identify false results (in case target always returns 200 OK)") do |d|
     options[:length] = d
   end
 
-  opts.on("-T LEVEL", "[Optional] Aggressivity level [1,2,3,4,5], more aggressive means more requests per second. Default: 3)") do |d|
+  opts.on("-T LEVEL","--threads LEVEL", "[Optional] Aggressivity level [1,2,3,4,5], more aggressive means more requests per second. Default: 3)") do |d|
     options[:agv_level] = d
   end
 
-  opts.on("-p PORT", "[Optional] Scans for one port") do |d|
+  opts.on("-p PORT","--port PORT", "[Optional] Scans for one port") do |d|
     options[:ports] = "#{d},"
   end
 
-  opts.on("-all", "[Optional] Scan all ports (only in scan mode)") do |d|
+  opts.on("-A","--all", "[Optional] Scan all ports (only in scan mode)") do |d|
     options[:ports] = $portsall
   end
 
